@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la ~/.claude/skills/ 2>&1 | head -50; echo \"---\"; ls -la ~/.claude/skills/ui-ux-pro-max* 2>&1)"
+    ]
+  }
+}
