@@ -412,8 +412,14 @@ section { position: relative; padding: 7rem 6vw; }
 .science .eyebrow { color: #8a6d1f; }
 
 /* ================= CTA ================= */
-.cta { display: flex; justify-content: center; }
+.cta {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
 .cta-inner {
+  position: relative;
+  z-index: 2;
   max-width: 640px;
   width: 100%;
   text-align: center;
@@ -422,6 +428,43 @@ section { position: relative; padding: 7rem 6vw; }
 }
 .cta-inner h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin-bottom: 0.75rem; }
 .cta-inner p { color: var(--muted); margin-bottom: 2rem; }
+
+/* ---- Aurora background (ported from the React/Tailwind "aurora-background" component) ---- */
+.aurora-bg {
+  position: absolute;
+  inset: -10px;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.55;
+  filter: blur(10px);
+  mask-image: radial-gradient(ellipse at 50% 30%, black 10%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 10%, transparent 70%);
+  background-image:
+    repeating-linear-gradient(100deg, #08080a 0%, #08080a 7%, transparent 10%, transparent 12%, #08080a 16%),
+    repeating-linear-gradient(100deg, #cba135 10%, #e3c876 15%, #f5e6b8 20%, #8a6d1f 25%, #cba135 30%);
+  background-size: 300%, 200%;
+  background-position: 50% 50%, 50% 50%;
+}
+.aurora-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(100deg, #08080a 0%, #08080a 7%, transparent 10%, transparent 12%, #08080a 16%),
+    repeating-linear-gradient(100deg, #cba135 10%, #e3c876 15%, #f5e6b8 20%, #8a6d1f 25%, #cba135 30%);
+  background-size: 200%, 100%;
+  background-attachment: fixed;
+  mix-blend-mode: difference;
+  animation: auroraShift 60s linear infinite;
+}
+@keyframes auroraShift {
+  from { background-position: 50% 50%, 50% 50%; }
+  to { background-position: 350% 50%, 350% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora-bg::after { animation: none; }
+}
 
 /* ================= FOOTER ================= */
 .footer {
