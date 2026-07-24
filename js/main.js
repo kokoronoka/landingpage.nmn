@@ -123,9 +123,11 @@
     return;
   }
 
-  // Stagger pillar cards by DOM order
-  document.querySelectorAll('.pillar-grid [data-reveal]').forEach((el, i) => {
-    el.style.setProperty('--i', i);
+  // Stagger grid children by DOM order (within each grid independently)
+  document.querySelectorAll('.stagger-grid').forEach((grid) => {
+    grid.querySelectorAll(':scope > [data-reveal]').forEach((el, i) => {
+      el.style.setProperty('--i', i);
+    });
   });
 
   const observer = new IntersectionObserver((entries) => {
