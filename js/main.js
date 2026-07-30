@@ -242,3 +242,36 @@
 
   stage.addEventListener('mouseleave', () => setActive(null));
 })();
+
+// ---------- Sticky WhatsApp widget ----------
+(function whatsappWidget() {
+  const fab = document.getElementById('waFabBtn');
+  const panel = document.getElementById('waPanel');
+  const closeBtn = document.getElementById('waPanelClose');
+  const widget = document.querySelector('.whatsapp-widget');
+  if (!fab || !panel || !widget) return;
+
+  function open() {
+    panel.classList.add('is-open');
+    panel.setAttribute('aria-hidden', 'false');
+    fab.setAttribute('aria-expanded', 'true');
+  }
+  function close() {
+    panel.classList.remove('is-open');
+    panel.setAttribute('aria-hidden', 'true');
+    fab.setAttribute('aria-expanded', 'false');
+  }
+  function toggle() {
+    panel.classList.contains('is-open') ? close() : open();
+  }
+
+  fab.addEventListener('click', toggle);
+  closeBtn.addEventListener('click', close);
+
+  document.addEventListener('click', (e) => {
+    if (!widget.contains(e.target)) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+})();
