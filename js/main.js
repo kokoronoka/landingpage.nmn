@@ -221,3 +221,24 @@
     });
   });
 })();
+
+// ---------- Circular capsule diagram interactivity ----------
+(function circleDiagram() {
+  const points = document.querySelectorAll('.circle-point');
+  const stage = document.querySelector('.circle-stage');
+  if (!points.length || !stage) return;
+
+  function setActive(target) {
+    points.forEach((p) => {
+      p.classList.toggle('is-active', p === target);
+      p.classList.toggle('is-dimmed', target !== null && p !== target);
+    });
+  }
+
+  points.forEach((point) => {
+    point.addEventListener('click', () => setActive(point));
+    point.addEventListener('focus', () => setActive(point));
+  });
+
+  stage.addEventListener('mouseleave', () => setActive(null));
+})();
