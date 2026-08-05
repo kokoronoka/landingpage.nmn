@@ -275,3 +275,99 @@
     if (e.key === 'Escape') close();
   });
 })();
+
+// ---------- 10 Reasons carousel ----------
+(function reasonsCarousel() {
+  const track = document.getElementById('reasonsTrack');
+  const prevBtn = document.getElementById('reasonsPrev');
+  const nextBtn = document.getElementById('reasonsNext');
+  const dotsWrap = document.getElementById('reasonsDots');
+  if (!track || !dotsWrap) return;
+
+  const cards = Array.from(track.querySelectorAll('.reason-card'));
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  cards.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot';
+    dot.setAttribute('aria-label', 'Go to reason ' + (i + 1));
+    dot.addEventListener('click', () => { scrollToIndex(i); pauseThenResume(); });
+    dotsWrap.appendChild(dot);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function cardStep() {
+    const gap = parseFloat(getComputedStyle(track).gap) || 0;
+    return cards[0].getBoundingClientRect().width + gap;
+  }
+  function currentIndex() {
+    return Math.round(track.scrollLeft / cardStep());
+  }
+  function scrollToIndex(i) {
+    track.scrollTo({ left: i * cardStep(), behavior: 'smooth' });
+  }
+  function updateDots() {
+    const idx = Math.max(0, Math.min(cards.length - 1, currentIndex()));
+    dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
+  }
+
+  track.addEventListener('scroll', updateDots, { passive: true });
+
+  function next() {
+    const idx = currentIndex();
+    scrollToIndex(idx >= cards.length - 1 ? 0 : idx + 1);
+  }
+  function prev() {
+    scrollToIndex(Math.max(0, currentIndex() - 1));
+  }
+
+  let autoTimer = null;
+  function startAuto() {
+    if (reduceMotion) return;
+    stopAuto();
+    autoTimer = setInterval(next, 3500);
+  }
+  function stopAuto() {
+    if (autoTimer) clearInterval(autoTimer);
+    autoTimer = null;
+  }
+  let resumeTimeout = null;
+  function pauseThenResume() {
+    stopAuto();
+    clearTimeout(resumeTimeout);
+    resumeTimeout = setTimeout(startAuto, 5000);
+  }
+
+  prevBtn?.addEventListener('click', () => { prev(); pauseThenResume(); });
+  nextBtn?.addEventListener('click', () => { next(); pauseThenResume(); });
+
+  track.addEventListener('mouseenter', stopAuto);
+  track.addEventListener('mouseleave', startAuto);
+  track.addEventListener('touchstart', pauseThenResume, { passive: true });
+  track.addEventListener('wheel', pauseThenResume, { passive: true });
+
+  // Mouse-drag-to-scroll (native overflow scrolling already covers touch swipe)
+  let isDragging = false;
+  let startX = 0;
+  let startScroll = 0;
+
+  track.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    isDragging = true;
+    startX = e.clientX;
+    startScroll = track.scrollLeft;
+    track.classList.add('is-dragging');
+    pauseThenResume();
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    track.scrollLeft = startScroll - (e.clientX - startX);
+  });
+  window.addEventListener('pointerup', () => {
+    isDragging = false;
+    track.classList.remove('is-dragging');
+  });
+
+  updateDots();
+  startAuto();
+})();

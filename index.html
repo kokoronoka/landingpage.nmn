@@ -293,77 +293,109 @@
       <p class="section-sub">Premium ingredients. Swiss precision. Complete healthy ageing formula.</p>
     </div>
 
-    <div class="reasons-grid stagger-grid">
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">01</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M3 12h18" stroke-width="3"/></svg></span>
-        <h3>Swiss Quality, End-to-End</h3>
-        <p>Formulated, manufactured, and packaged entirely in Switzerland inside a SwissMedic-approved facility.</p>
-      </article>
+    <div class="reasons-carousel">
+      <button class="carousel-arrow carousel-arrow--prev" id="reasonsPrev" aria-label="Previous reason">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">02</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/></svg></span>
-        <h3>Longevir&reg; Pharmaceutical-Grade NMN</h3>
-        <p>Over 99% purity NMN, engineered to maximise natural NAD&#8314; restoration.</p>
-      </article>
+      <div class="reasons-track" id="reasonsTrack">
+        <article class="reason-card">
+          <img src="assets/img/swiss-mountain.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">01</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M3 12h18" stroke-width="3"/></svg></span>
+          <h3>Swiss Quality, End-to-End</h3>
+          <p>Formulated, manufactured, and packaged entirely in Switzerland inside a SwissMedic-approved facility.</p>
+        </article>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">03</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a5 5 0 0 0-5 5c0 1.5.6 2.4 1.3 3.2.6.7 1.2 1.3 1.2 2.3v1.5h5v-1.5c0-1 .6-1.6 1.2-2.3C16.4 9.4 17 8.5 17 7a5 5 0 0 0-5-5z"/><path d="M9.5 19h5M10 22h4"/></svg></span>
-        <h3>Sharp-PS&reg; Green Brain Support</h3>
-        <p>Clinically researched phosphatidylserine, backed by over 50 scientific studies on cognitive performance.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/ing-nmn.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">02</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/></svg></span>
+          <h3>Longevir&reg; Pharmaceutical-Grade NMN</h3>
+          <p>Over 99% purity NMN, engineered to maximise natural NAD&#8314; restoration.</p>
+        </article>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">04</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l7 4v6c0 5-3 8-7 10-4-2-7-5-7-10V6l7-4z"/></svg></span>
-        <h3>AstaReal&reg; Antioxidant Power</h3>
-        <p>Backed by more than 70 human clinical studies, defending cells against oxidative stress.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/ing-sharp-ps-green.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">03</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a5 5 0 0 0-5 5c0 1.5.6 2.4 1.3 3.2.6.7 1.2 1.3 1.2 2.3v1.5h5v-1.5c0-1 .6-1.6 1.2-2.3C16.4 9.4 17 8.5 17 7a5 5 0 0 0-5-5z"/><path d="M9.5 19h5M10 22h4"/></svg></span>
+          <h3>Sharp-PS&reg; Green Brain Support</h3>
+          <p>Clinically researched phosphatidylserine, backed by over 50 scientific studies on cognitive performance.</p>
+        </article>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">05</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c-4-3-8-6.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 4.5-4 8-8 11z"/></svg></span>
-        <h3>Trans-Resveratrol Synergy</h3>
-        <p>Premium Japanese Knotweed extract that complements NMN for lasting cellular resilience.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/ing-astareal.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">04</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l7 4v6c0 5-3 8-7 10-4-2-7-5-7-10V6l7-4z"/></svg></span>
+          <h3>AstaReal&reg; Antioxidant Power</h3>
+          <p>Backed by more than 70 human clinical studies, defending cells against oxidative stress.</p>
+        </article>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">06</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
-        <h3>Four Trademarked Ingredients, One Formula</h3>
-        <p>A complete synergistic formula, not a single-ingredient supplement like most NMN products.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/ing-trans-resveratrol.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">05</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c-4-3-8-6.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 4.5-4 8-8 11z"/></svg></span>
+          <h3>Trans-Resveratrol Synergy</h3>
+          <p>Premium Japanese Knotweed extract that complements NMN for lasting cellular resilience.</p>
+        </article>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">07</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6M10 2v6l-4.5 8a2 2 0 0 0 1.8 3h9.4a2 2 0 0 0 1.8-3L14 8V2"/></svg></span>
-        <h3>Miron&reg; Violet Glass Protection</h3>
-        <p>Protects light-sensitive ingredients from degradation, preserving purity and potency.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/capsule-hold.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">06</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
+          <h3>Four Trademarked Ingredients, One Formula</h3>
+          <p>A complete synergistic formula, not a single-ingredient supplement like most NMN products.</p>
+        </article>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">08</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="9" width="16" height="10" rx="5"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg></span>
-        <h3>60 Capsules Per Bottle</h3>
-        <p>A full month's supply in every bottle, for uninterrupted daily support.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/miron-bottle.png" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">07</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6M10 2v6l-4.5 8a2 2 0 0 0 1.8 3h9.4a2 2 0 0 0 1.8-3L14 8V2"/></svg></span>
+          <h3>Miron&reg; Violet Glass Protection</h3>
+          <p>Protects light-sensitive ingredients from degradation, preserving purity and potency.</p>
+        </article>
 
-      <article class="reason-card" data-reveal>
-        <span class="reason-num">09</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></span>
-        <h3>Complete Healthy Ageing Support</h3>
-        <p>Targets energy, cognition, antioxidant defence, sleep, and skin &mdash; not just one pathway.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/lifestyle-hallmarks.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">08</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="9" width="16" height="10" rx="5"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg></span>
+          <h3>60 Capsules Per Bottle</h3>
+          <p>A full month's supply in every bottle, for uninterrupted daily support.</p>
+        </article>
 
-      <article class="reason-card reason-card--gold" data-reveal>
-        <span class="reason-num">10</span>
-        <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
-        <h3>Formulated on Evidence, Not Trends</h3>
-        <p>Built on peer-reviewed research targeting the NAD&#8314; pathway central to healthy ageing.</p>
-      </article>
+        <article class="reason-card">
+          <img src="assets/img/ZV NMN DNA.png" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">09</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></span>
+          <h3>Complete Healthy Ageing Support</h3>
+          <p>Targets energy, cognition, antioxidant defence, sleep, and skin &mdash; not just one pathway.</p>
+        </article>
+
+        <article class="reason-card reason-card--gold">
+          <img src="assets/img/ing-nmn.jpg" alt="" class="reason-bg">
+          <div class="reason-scrim"></div>
+          <span class="reason-num">10</span>
+          <span class="reason-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+          <h3>Formulated on Evidence, Not Trends</h3>
+          <p>Built on peer-reviewed research targeting the NAD&#8314; pathway central to healthy ageing.</p>
+        </article>
+      </div>
+
+      <button class="carousel-arrow carousel-arrow--next" id="reasonsNext" aria-label="Next reason">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
     </div>
+
+    <div class="carousel-dots" id="reasonsDots" role="tablist" aria-label="Reason slides"></div>
 
     <div class="reasons-strip">
       <div class="reasons-strip-item">
