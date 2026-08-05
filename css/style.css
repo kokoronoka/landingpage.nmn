@@ -497,33 +497,29 @@ section { position: relative; padding: 7rem 6vw; }
 .product-media {
   position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  gap: -2rem;
   min-height: 420px;
 }
 
 .product-glow {
   position: absolute;
-  width: 60%;
-  height: 60%;
-  background: radial-gradient(circle, rgba(203,161,53,0.25), transparent 70%);
-  filter: blur(30px);
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(203,161,53,0.28), transparent 65%);
+  pointer-events: none;
   z-index: 0;
 }
 
-.product-bottle {
+.product-display-card {
   position: relative;
   z-index: 2;
-  width: 42%;
-  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+  width: 100%;
+  max-width: 480px;
 }
-.product-box {
-  position: relative;
-  z-index: 1;
-  width: 38%;
-  margin-left: -2.5rem;
-  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+.product-display {
+  width: 100%;
+  display: block;
+  filter: drop-shadow(0 25px 45px rgba(0,0,0,0.6));
 }
 
 .product-copy h2 { font-size: clamp(2.2rem, 4vw, 3.2rem); margin-bottom: 1rem; }
