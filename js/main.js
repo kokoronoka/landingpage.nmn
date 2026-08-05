@@ -325,7 +325,7 @@
   function startAuto() {
     if (reduceMotion) return;
     stopAuto();
-    autoTimer = setInterval(next, 3500);
+    autoTimer = setInterval(next, 1500);
   }
   function stopAuto() {
     if (autoTimer) clearInterval(autoTimer);
@@ -370,4 +370,209 @@
 
   updateDots();
   startAuto();
+})();
+
+// ---------- Custom cursor (vanilla port of a GSAP dot+ring cursor) ----------
+(function customCursor() {
+  const cursorDot = document.getElementById('cursor');
+  const cursorRing = document.getElementById('cursor-ring');
+  if (!cursorDot || !cursorRing) return;
+
+  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!canHover || reduceMotion) return;
+
+  document.documentElement.classList.add('has-custom-cursor');
+
+  let cX = -200, cY = -200;
+  let rX = -200, rY = -200;
+
+  document.addEventListener('mousemove', (e) => {
+    cX = e.clientX;
+    cY = e.clientY;
+    cursorDot.style.left = cX + 'px';
+    cursorDot.style.top = cY + 'px';
+  });
+
+  function tick() {
+    rX += (cX - rX) * 0.12;
+    rY += (cY - rY) * 0.12;
+    cursorRing.style.left = rX + 'px';
+    cursorRing.style.top = rY + 'px';
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  document.querySelectorAll('a, button').forEach((el) => {
+    el.addEventListener('mouseenter', () => cursorRing.classList.add('is-active'));
+    el.addEventListener('mouseleave', () => cursorRing.classList.remove('is-active'));
+  });
+})();
+
+// ---------- Interactive blood-cell background for "Why NMN Matters" ----------
+(function scienceBloodFlow() {
+  const canvas = document.getElementById('science-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  function resize() {
+    const s = canvas.parentElement;
+    W = canvas.width = s.offsetWidth;
+    H = canvas.height = s.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Mouse tracking (listen on section; canvas has pointer-events:none)
+  let mx = -9999, my = -9999;
+  const section = canvas.parentElement;
+  section.addEventListener('mousemove', (e) => {
+    const r = canvas.getBoundingClientRect();
+    mx = e.clientX - r.left;
+    my = e.clientY - r.top;
+  });
+  section.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
+
+  // ── Cell factory ──────────────────────────────────────────
+  const TOTAL = 28;
+  const makeCell = () => {
+    const bvx = (Math.random() - 0.5) * 0.38;
+    const bvy = (Math.random() - 0.5) * 0.22;
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      rx: 20 + Math.random() * 16,
+      ry: 13 + Math.random() * 10,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.007,
+      vx: bvx, vy: bvy,
+      baseVx: bvx, baseVy: bvy,
+      phase: Math.random() * Math.PI * 2,
+      tilt: Math.random() * 0.7,
+      glow: 0,
+    };
+  };
+  const cells = Array.from({ length: TOTAL }, makeCell);
+
+  // ── Background (vessel interior) ─────────────────────────
+  function drawBg() {
+    const g = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.max(W, H) * 0.7);
+    g.addColorStop(0, '#f8dcd0');
+    g.addColorStop(0.38, '#f0c4b0');
+    g.addColorStop(0.72, '#e4a898');
+    g.addColorStop(1, '#cc8878');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    [[W * 0.88, H * 0.78, 0.11], [W * 0.66, H * 0.60, 0.09], [W * 0.44, H * 0.44, 0.07]]
+      .forEach(([rx, ry, op]) => {
+        ctx.beginPath();
+        ctx.ellipse(W / 2, H / 2, rx, ry, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(175,105,95,${op})`;
+        ctx.lineWidth = Math.max(W, H) * 0.042;
+        ctx.stroke();
+      });
+  }
+
+  // ── Single cell draw ─────────────────────────────────────
+  function drawCell(c) {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.angle);
+    const sy = Math.max(0.18, 1 - c.tilt * 0.82);
+    ctx.scale(1, sy);
+
+    if (c.glow > 0.01) {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, c.rx * 1.55, c.ry * 1.55, 0, 0, Math.PI * 2);
+      const hg = ctx.createRadialGradient(0, 0, c.rx * 0.8, 0, 0, c.rx * 1.55);
+      hg.addColorStop(0, `rgba(255,120,140,${c.glow * 0.45})`);
+      hg.addColorStop(1, `rgba(255,80,100,0)`);
+      ctx.fillStyle = hg;
+      ctx.fill();
+    }
+
+    ctx.shadowColor = 'rgba(80,20,20,.22)';
+    ctx.shadowBlur = 7;
+    ctx.shadowOffsetY = 3;
+
+    const bright = c.glow * 28;
+    const g = ctx.createRadialGradient(-c.rx * 0.15, -c.ry * 0.2, c.rx * 0.04, 0, 0, c.rx);
+    g.addColorStop(0, `rgb(${216 + bright},${80 + bright},${106 + bright})`);
+    g.addColorStop(0.38, `rgb(${192 + bright},${56 + bright},${85 + bright})`);
+    g.addColorStop(0.75, '#8E2040');
+    g.addColorStop(1, '#6A1030');
+    ctx.beginPath();
+    ctx.ellipse(0, 0, c.rx, c.ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+
+    const dg = ctx.createRadialGradient(0, 0, 0, 0, 0, c.rx * 0.42);
+    dg.addColorStop(0, '#78183088');
+    dg.addColorStop(1, 'rgba(140,30,50,0)');
+    ctx.beginPath();
+    ctx.ellipse(0, 0, c.rx * 0.42, c.ry * 0.40, 0, 0, Math.PI * 2);
+    ctx.fillStyle = dg;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(-c.rx * 0.22, -c.ry * 0.28, c.rx * 0.27, c.ry * 0.20, -0.3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,200,200,${0.26 + c.glow * 0.22})`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ── Visibility guard (skip renders when off-screen) ───────
+  let visible = false;
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.05 })
+    .observe(section);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) {
+    drawBg();
+    cells.forEach(drawCell);
+    return;
+  }
+
+  // ── Physics constants ─────────────────────────────────────
+  const PUSH_R = 88;
+  const PUSH_F = 3.2;
+
+  // ── Animation loop ────────────────────────────────────────
+  let t = 0;
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (!visible) return;
+    t += 0.01;
+    ctx.clearRect(0, 0, W, H);
+    drawBg();
+    cells.forEach((c) => {
+      const dx = c.x - mx, dy = c.y - my;
+      const dist = Math.hypot(dx, dy);
+      if (dist < PUSH_R && dist > 0) {
+        const f = (1 - dist / PUSH_R) * PUSH_F;
+        c.vx += (dx / dist) * f;
+        c.vy += (dy / dist) * f;
+        c.glow = Math.min(1, c.glow + 0.14);
+      } else {
+        c.glow = Math.max(0, c.glow - 0.04);
+      }
+
+      c.vx = c.vx * 0.88 + c.baseVx * 0.12;
+      c.vy = c.vy * 0.88 + c.baseVy * 0.12;
+
+      c.x += c.vx + Math.sin(t * 0.45 + c.phase) * 0.14;
+      c.y += c.vy + Math.cos(t * 0.38 + c.phase + 1) * 0.10;
+      c.angle += c.spin;
+
+      if (c.x > W + c.rx * 2) c.x = -c.rx * 2;
+      if (c.x < -c.rx * 2) c.x = W + c.rx * 2;
+      if (c.y > H + c.ry * 2) c.y = -c.ry * 2;
+      if (c.y < -c.ry * 2) c.y = H + c.ry * 2;
+
+      drawCell(c);
+    });
+  })();
 })();

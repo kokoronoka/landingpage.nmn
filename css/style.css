@@ -591,12 +591,23 @@ section { position: relative; padding: 7rem 6vw; }
   grid-template-columns: 0.8fr 1fr;
   align-items: center;
   gap: 3rem;
+  overflow: hidden;
 }
 @media (max-width: 860px) {
   .science { grid-template-columns: 1fr; text-align: center; }
 }
 
-.science-visual { display: flex; justify-content: center; }
+#science-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.science-copy { position: relative; z-index: 1; }
+.science-visual { position: relative; z-index: 1; display: flex; justify-content: center; }
 .dna-graphic { width: 100%; max-width: 220px; opacity: 0.9; }
 
 .science-copy h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin-bottom: 1.25rem; color: var(--black); }
@@ -1272,4 +1283,49 @@ section { position: relative; padding: 7rem 6vw; }
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* ================= CUSTOM CURSOR ================= */
+/* Only on devices with a real pointer (not touch) and no reduced-motion preference. */
+@media (hover: hover) and (pointer: fine) {
+  .has-custom-cursor,
+  .has-custom-cursor a,
+  .has-custom-cursor button {
+    cursor: none;
+  }
+
+  .cursor-dot,
+  .cursor-ring {
+    position: fixed;
+    top: -200px;
+    left: -200px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .cursor-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--gold-soft);
+  }
+
+  .cursor-ring {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid rgba(203, 161, 53, 0.55);
+    opacity: 0.55;
+    transition: width 0.3s var(--ease), height 0.3s var(--ease), opacity 0.3s var(--ease), border-color 0.3s var(--ease);
+  }
+  .cursor-ring.is-active {
+    width: 56px;
+    height: 56px;
+    opacity: 0.9;
+    border-color: var(--gold-soft);
+  }
+}
+
+@media not all and (hover: hover) and (pointer: fine) {
+  .cursor-dot, .cursor-ring { display: none; }
 }
