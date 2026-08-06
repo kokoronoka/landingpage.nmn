@@ -671,7 +671,7 @@ section { position: relative; padding: 7rem 6vw; }
 /* ================= MIRON GLASS ================= */
 .glass-section {
   display: grid;
-  grid-template-columns: 0.8fr 1fr;
+  grid-template-columns: 1.1fr 1fr;
   align-items: center;
   gap: 3rem;
   overflow: hidden;
@@ -694,6 +694,13 @@ section { position: relative; padding: 7rem 6vw; }
 .glass-visual img {
   width: 100%;
   max-width: 280px;
+  border-radius: 16px;
+  filter: drop-shadow(0 20px 50px rgba(140,110,220,0.35));
+}
+.glass-visual video {
+  width: 100%;
+  max-width: 460px;
+  border-radius: 16px;
   filter: drop-shadow(0 20px 50px rgba(140,110,220,0.35));
 }
 .glass-copy {
