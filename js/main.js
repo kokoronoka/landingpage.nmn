@@ -1,91 +1,3 @@
-// ---------- Hero video seamless fade-loop (ported from RAF-based React spec) ----------
-(function heroVideoFade() {
-  const video = document.getElementById('heroVideo');
-  if (!video) return;
-
-  const FADE_MS = 500;
-  const FADE_OUT_LEAD = 0.55; // seconds before end to start fading out
-  let rafId = null;
-  let fadingOut = false;
-
-  function cancelFade() {
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-  }
-
-  function fade(target, duration, onDone) {
-    cancelFade();
-    const start = performance.now();
-    const from = parseFloat(video.style.opacity || (target === 0 ? '1' : '0'));
-
-    function step(now) {
-      const t = Math.min((now - start) / duration, 1);
-      video.style.opacity = String(from + (target - from) * t);
-      if (t < 1) {
-        rafId = requestAnimationFrame(step);
-      } else {
-        rafId = null;
-        if (onDone) onDone();
-      }
-    }
-    rafId = requestAnimationFrame(step);
-  }
-
-  function fadeIn() { fade(1, FADE_MS); }
-  function fadeOut(onDone) { fade(0, FADE_MS, onDone); }
-
-  video.addEventListener('loadeddata', fadeIn);
-
-  video.addEventListener('timeupdate', () => {
-    if (fadingOut) return;
-    if (video.duration && video.duration - video.currentTime <= FADE_OUT_LEAD) {
-      fadingOut = true;
-      fadeOut();
-    }
-  });
-
-  video.addEventListener('ended', () => {
-    video.style.opacity = '0';
-    fadingOut = false;
-    setTimeout(() => {
-      video.currentTime = 0;
-      video.play();
-      fadeIn();
-    }, 100);
-  });
-
-  // Autoplay can be blocked before user interaction on some browsers; retry on first interaction.
-  video.play().catch(() => {
-    const resume = () => { video.play(); document.removeEventListener('click', resume); };
-    document.addEventListener('click', resume, { once: true });
-  });
-})();
-
-// ---------- Email capture (placeholder — wire up to your ESP/backend) ----------
-(function emailForm() {
-  const form = document.querySelector('.hero-cta');
-  if (!form) return;
-  const input = form.querySelector('input[type="email"]');
-  const button = form.querySelector('.btn-circle');
-
-  button.addEventListener('click', () => {
-    const value = input.value.trim();
-    if (!value || !value.includes('@')) {
-      input.focus();
-      return;
-    }
-    // TODO: replace with real submission (fetch to your API / ESP endpoint)
-    console.log('Subscribe email:', value);
-    input.value = '';
-    input.placeholder = 'Thanks — you’re on the list!';
-  });
-
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') button.click();
-  });
-})();
 
 // ---------- Nav background on scroll ----------
 (function navScroll() {
@@ -222,27 +134,6 @@
   });
 })();
 
-// ---------- Circular capsule diagram interactivity ----------
-(function circleDiagram() {
-  const points = document.querySelectorAll('.circle-point');
-  const stage = document.querySelector('.circle-stage');
-  if (!points.length || !stage) return;
-
-  function setActive(target) {
-    points.forEach((p) => {
-      p.classList.toggle('is-active', p === target);
-      p.classList.toggle('is-dimmed', target !== null && p !== target);
-    });
-  }
-
-  points.forEach((point) => {
-    point.addEventListener('click', () => setActive(point));
-    point.addEventListener('focus', () => setActive(point));
-  });
-
-  stage.addEventListener('mouseleave', () => setActive(null));
-})();
-
 // ---------- Sticky WhatsApp widget ----------
 (function whatsappWidget() {
   const fab = document.getElementById('waFabBtn');
@@ -276,303 +167,166 @@
   });
 })();
 
-// ---------- 10 Reasons carousel ----------
-(function reasonsCarousel() {
-  const track = document.getElementById('reasonsTrack');
-  const prevBtn = document.getElementById('reasonsPrev');
-  const nextBtn = document.getElementById('reasonsNext');
-  const dotsWrap = document.getElementById('reasonsDots');
-  if (!track || !dotsWrap) return;
+// ---------- Ingredients pinned scroll-steps ----------
+(function pinnedIngredients() {
+  const wrapper = document.getElementById('ingredientsPinWrapper');
+  if (!wrapper) return;
 
-  const cards = Array.from(track.querySelectorAll('.reason-card'));
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const circle = document.getElementById('pinCircle');
+  const icons = Array.from(wrapper.querySelectorAll('.pin-icon'));
+  const contents = Array.from(wrapper.querySelectorAll('.pin-content'));
+  const rings = Array.from(wrapper.querySelectorAll('.pin-ring-el'));
+  const orbitDots = Array.from(wrapper.querySelectorAll('.pin-dot'));
+  const progressDots = Array.from(wrapper.querySelectorAll('.pin-progress-dot'));
+  const badge = document.getElementById('pinBadge');
+  const badgeNum = document.getElementById('pinBadgeNum');
+  if (!icons.length || !contents.length || !badge) return;
 
-  cards.forEach((_, i) => {
-    const dot = document.createElement('button');
-    dot.className = 'carousel-dot';
-    dot.setAttribute('aria-label', 'Go to reason ' + (i + 1));
-    dot.addEventListener('click', () => { scrollToIndex(i); pauseThenResume(); });
-    dotsWrap.appendChild(dot);
-  });
-  const dots = Array.from(dotsWrap.children);
+  const stepCount = icons.length;
+  const badgeNumbers = ['01', '02', '03', '04', '05', '06'];
 
-  function cardStep() {
-    const gap = parseFloat(getComputedStyle(track).gap) || 0;
-    return cards[0].getBoundingClientRect().width + gap;
-  }
-  function currentIndex() {
-    return Math.round(track.scrollLeft / cardStep());
-  }
-  function scrollToIndex(i) {
-    track.scrollTo({ left: i * cardStep(), behavior: 'smooth' });
-  }
-  function updateDots() {
-    const idx = Math.max(0, Math.min(cards.length - 1, currentIndex()));
-    dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
-  }
+  // Badge rides the outermost visible ring, which grows with each step (kept in
+  // sync with the CSS data-ring widths — smallest ring first, larger rings added
+  // outside it). On step 1 that ring is the oversized half circle, whose centre
+  // sits below the container, so the badge tracks a shallow arc across its top
+  // instead of a full orbit.
+  const RING_DIAMETERS = [42, 61, 80, 100]; // %, index-aligned with step/data-ring
+  const HALF_RING_CENTER_X = 16;  // % of container, matches the CSS step-0 ring
+  const HALF_RING_CENTER_Y = 152;
+  const HALF_RING_RADIUS = 100;
+  const HALF_RING_SWEEP = Math.PI / 6;
+  const isWide = () => window.matchMedia('(min-width: 861px)').matches;
 
-  track.addEventListener('scroll', updateDots, { passive: true });
+  let activeIndex = -1;
+  let ticking = false;
 
-  function next() {
-    const idx = currentIndex();
-    scrollToIndex(idx >= cards.length - 1 ? 0 : idx + 1);
-  }
-  function prev() {
-    scrollToIndex(Math.max(0, currentIndex() - 1));
-  }
+  function setActive(index) {
+    if (index === activeIndex) return;
+    activeIndex = index;
 
-  let autoTimer = null;
-  function startAuto() {
-    if (reduceMotion) return;
-    stopAuto();
-    autoTimer = setInterval(next, 1500);
-  }
-  function stopAuto() {
-    if (autoTimer) clearInterval(autoTimer);
-    autoTimer = null;
-  }
-  let resumeTimeout = null;
-  function pauseThenResume() {
-    stopAuto();
-    clearTimeout(resumeTimeout);
-    resumeTimeout = setTimeout(startAuto, 5000);
+    icons.forEach((el, i) => el.classList.toggle('is-active', i === index));
+    contents.forEach((el, i) => el.classList.toggle('is-active', i === index));
+    progressDots.forEach((el, i) => el.classList.toggle('is-active', i === index));
+
+    // Layers accumulate: step N reveals rings 0..N and N orbiting dots.
+    rings.forEach((el, i) => el.classList.toggle('is-shown', i <= index));
+    orbitDots.forEach((el, i) => el.classList.toggle('is-shown', i < index));
+
+    if (circle) circle.dataset.step = String(index);
+    badgeNum.textContent = badgeNumbers[index] || String(index + 1).padStart(2, '0');
+    badge.classList.toggle('pin-badge--gold', index === 2);
   }
 
-  prevBtn?.addEventListener('click', () => { prev(); pauseThenResume(); });
-  nextBtn?.addEventListener('click', () => { next(); pauseThenResume(); });
+  function update() {
+    const rect = wrapper.getBoundingClientRect();
+    const total = wrapper.offsetHeight - window.innerHeight;
+    const scrolled = -rect.top;
+    const progress = Math.min(1, Math.max(0, total > 0 ? scrolled / total : 0));
+    const stepFloat = progress * stepCount;
+    const index = Math.min(stepCount - 1, Math.floor(stepFloat));
 
-  track.addEventListener('mouseenter', stopAuto);
-  track.addEventListener('mouseleave', startAuto);
-  track.addEventListener('touchstart', pauseThenResume, { passive: true });
-  track.addEventListener('wheel', pauseThenResume, { passive: true });
+    setActive(index);
 
-  // Mouse-drag-to-scroll (native overflow scrolling already covers touch swipe)
-  let isDragging = false;
-  let startX = 0;
-  let startScroll = 0;
+    // Badge tracks the outermost visible ring as scroll progresses (continuous, not step-snapped)
+    let centerX = 50;
+    let centerY = 50;
+    let radius = RING_DIAMETERS[index] / 2;
+    let angle = (stepFloat / stepCount) * Math.PI * 2 - Math.PI / 2;
 
-  track.addEventListener('pointerdown', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    isDragging = true;
-    startX = e.clientX;
-    startScroll = track.scrollLeft;
-    track.classList.add('is-dragging');
-    pauseThenResume();
-  });
-  window.addEventListener('pointermove', (e) => {
-    if (!isDragging) return;
-    track.scrollLeft = startScroll - (e.clientX - startX);
-  });
-  window.addEventListener('pointerup', () => {
-    isDragging = false;
-    track.classList.remove('is-dragging');
-  });
-
-  updateDots();
-  startAuto();
-})();
-
-// ---------- Custom cursor (vanilla port of a GSAP dot+ring cursor) ----------
-(function customCursor() {
-  const cursorDot = document.getElementById('cursor');
-  const cursorRing = document.getElementById('cursor-ring');
-  if (!cursorDot || !cursorRing) return;
-
-  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!canHover || reduceMotion) return;
-
-  document.documentElement.classList.add('has-custom-cursor');
-
-  let cX = -200, cY = -200;
-  let rX = -200, rY = -200;
-
-  document.addEventListener('mousemove', (e) => {
-    cX = e.clientX;
-    cY = e.clientY;
-    cursorDot.style.left = cX + 'px';
-    cursorDot.style.top = cY + 'px';
-  });
-
-  function tick() {
-    rX += (cX - rX) * 0.12;
-    rY += (cY - rY) * 0.12;
-    cursorRing.style.left = rX + 'px';
-    cursorRing.style.top = rY + 'px';
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-
-  document.querySelectorAll('a, button').forEach((el) => {
-    el.addEventListener('mouseenter', () => cursorRing.classList.add('is-active'));
-    el.addEventListener('mouseleave', () => cursorRing.classList.remove('is-active'));
-  });
-})();
-
-// ---------- Interactive blood-cell background for "Why NMN Matters" ----------
-(function scienceBloodFlow() {
-  const canvas = document.getElementById('science-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W, H;
-
-  function resize() {
-    const s = canvas.parentElement;
-    W = canvas.width = s.offsetWidth;
-    H = canvas.height = s.offsetHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // Mouse tracking (listen on section; canvas has pointer-events:none)
-  let mx = -9999, my = -9999;
-  const section = canvas.parentElement;
-  section.addEventListener('mousemove', (e) => {
-    const r = canvas.getBoundingClientRect();
-    mx = e.clientX - r.left;
-    my = e.clientY - r.top;
-  });
-  section.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
-
-  // ── Cell factory ──────────────────────────────────────────
-  const TOTAL = 28;
-  const makeCell = () => {
-    const bvx = (Math.random() - 0.5) * 0.38;
-    const bvy = (Math.random() - 0.5) * 0.22;
-    return {
-      x: Math.random() * W,
-      y: Math.random() * H,
-      rx: 20 + Math.random() * 16,
-      ry: 13 + Math.random() * 10,
-      angle: Math.random() * Math.PI * 2,
-      spin: (Math.random() - 0.5) * 0.007,
-      vx: bvx, vy: bvy,
-      baseVx: bvx, baseVy: bvy,
-      phase: Math.random() * Math.PI * 2,
-      tilt: Math.random() * 0.7,
-      glow: 0,
-    };
-  };
-  const cells = Array.from({ length: TOTAL }, makeCell);
-
-  // ── Background (vessel interior) ─────────────────────────
-  function drawBg() {
-    const g = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.max(W, H) * 0.7);
-    g.addColorStop(0, '#f8dcd0');
-    g.addColorStop(0.38, '#f0c4b0');
-    g.addColorStop(0.72, '#e4a898');
-    g.addColorStop(1, '#cc8878');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    [[W * 0.88, H * 0.78, 0.11], [W * 0.66, H * 0.60, 0.09], [W * 0.44, H * 0.44, 0.07]]
-      .forEach(([rx, ry, op]) => {
-        ctx.beginPath();
-        ctx.ellipse(W / 2, H / 2, rx, ry, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(175,105,95,${op})`;
-        ctx.lineWidth = Math.max(W, H) * 0.042;
-        ctx.stroke();
-      });
-  }
-
-  // ── Single cell draw ─────────────────────────────────────
-  function drawCell(c) {
-    ctx.save();
-    ctx.translate(c.x, c.y);
-    ctx.rotate(c.angle);
-    const sy = Math.max(0.18, 1 - c.tilt * 0.82);
-    ctx.scale(1, sy);
-
-    if (c.glow > 0.01) {
-      ctx.beginPath();
-      ctx.ellipse(0, 0, c.rx * 1.55, c.ry * 1.55, 0, 0, Math.PI * 2);
-      const hg = ctx.createRadialGradient(0, 0, c.rx * 0.8, 0, 0, c.rx * 1.55);
-      hg.addColorStop(0, `rgba(255,120,140,${c.glow * 0.45})`);
-      hg.addColorStop(1, `rgba(255,80,100,0)`);
-      ctx.fillStyle = hg;
-      ctx.fill();
+    if (index === 0 && isWide()) {
+      centerX = HALF_RING_CENTER_X;
+      centerY = HALF_RING_CENTER_Y;
+      radius = HALF_RING_RADIUS;
+      angle = -Math.PI / 2 + (stepFloat - 0.5) * HALF_RING_SWEEP;
     }
 
-    ctx.shadowColor = 'rgba(80,20,20,.22)';
-    ctx.shadowBlur = 7;
-    ctx.shadowOffsetY = 3;
+    badge.style.left = (centerX + radius * Math.cos(angle)) + '%';
+    badge.style.top = (centerY + radius * Math.sin(angle)) + '%';
 
-    const bright = c.glow * 28;
-    const g = ctx.createRadialGradient(-c.rx * 0.15, -c.ry * 0.2, c.rx * 0.04, 0, 0, c.rx);
-    g.addColorStop(0, `rgb(${216 + bright},${80 + bright},${106 + bright})`);
-    g.addColorStop(0.38, `rgb(${192 + bright},${56 + bright},${85 + bright})`);
-    g.addColorStop(0.75, '#8E2040');
-    g.addColorStop(1, '#6A1030');
-    ctx.beginPath();
-    ctx.ellipse(0, 0, c.rx, c.ry, 0, 0, Math.PI * 2);
-    ctx.fillStyle = g;
-    ctx.fill();
-    ctx.shadowColor = 'transparent';
-
-    const dg = ctx.createRadialGradient(0, 0, 0, 0, 0, c.rx * 0.42);
-    dg.addColorStop(0, '#78183088');
-    dg.addColorStop(1, 'rgba(140,30,50,0)');
-    ctx.beginPath();
-    ctx.ellipse(0, 0, c.rx * 0.42, c.ry * 0.40, 0, 0, Math.PI * 2);
-    ctx.fillStyle = dg;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.ellipse(-c.rx * 0.22, -c.ry * 0.28, c.rx * 0.27, c.ry * 0.20, -0.3, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,200,200,${0.26 + c.glow * 0.22})`;
-    ctx.fill();
-    ctx.restore();
+    ticking = false;
   }
 
-  // ── Visibility guard (skip renders when off-screen) ───────
-  let visible = false;
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.05 })
-    .observe(section);
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(update);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  update();
+})();
+
+// ---------- Miron Glass immersive scroll-expand video ----------
+(function glassScrollExpand() {
+  const wrapper = document.getElementById('glassHeroWrapper');
+  const bg = document.getElementById('glassHeroBg');
+  const media = document.getElementById('glassHeroMedia');
+  const scrim = document.getElementById('glassHeroVideoScrim');
+  const wordLeft = document.getElementById('glassWordLeft');
+  const wordRight = document.getElementById('glassWordRight');
+  const hint = document.getElementById('glassHeroHint');
+  if (!wrapper || !media) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function isMobile() {
+    return window.innerWidth < 768;
+  }
+
+  // Start and end sizes are both derived from the live viewport, so the growth
+  // finishes exactly at progress 1. Fixed pixel growth used to blow straight
+  // past the CSS max-width on small screens — the width hit its clamp around
+  // 11% scroll and froze while the height carried on growing.
+  function metrics() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const mobile = isMobile();
+    return {
+      startW: mobile ? Math.min(220, vw * 0.62) : 300,
+      startH: mobile ? Math.min(300, vh * 0.38) : 400,
+      endW: mobile ? vw * 0.92 : Math.min(vw * 0.95, 1150),
+      endH: mobile ? vh * 0.72 : Math.min(vh * 0.85, 780),
+      textShift: mobile ? 75 : 60
+    };
+  }
+
+  function render(progress) {
+    const { startW, startH, endW, endH, textShift } = metrics();
+
+    media.style.width = (startW + progress * (endW - startW)) + 'px';
+    media.style.height = (startH + progress * (endH - startH)) + 'px';
+
+    if (wordLeft) wordLeft.style.transform = `translateX(${-progress * textShift}vw)`;
+    if (wordRight) wordRight.style.transform = `translateX(${progress * textShift}vw)`;
+
+    if (bg) bg.style.opacity = String(1 - progress);
+    if (scrim) scrim.style.opacity = String(Math.max(0.15, 0.55 - progress * 0.4));
+    if (hint) hint.style.opacity = progress > 0.12 ? '0' : '1';
+  }
+
   if (reduceMotion) {
-    drawBg();
-    cells.forEach(drawCell);
+    render(1);
     return;
   }
 
-  // ── Physics constants ─────────────────────────────────────
-  const PUSH_R = 88;
-  const PUSH_F = 3.2;
+  let ticking = false;
 
-  // ── Animation loop ────────────────────────────────────────
-  let t = 0;
-  (function loop() {
-    requestAnimationFrame(loop);
-    if (!visible) return;
-    t += 0.01;
-    ctx.clearRect(0, 0, W, H);
-    drawBg();
-    cells.forEach((c) => {
-      const dx = c.x - mx, dy = c.y - my;
-      const dist = Math.hypot(dx, dy);
-      if (dist < PUSH_R && dist > 0) {
-        const f = (1 - dist / PUSH_R) * PUSH_F;
-        c.vx += (dx / dist) * f;
-        c.vy += (dy / dist) * f;
-        c.glow = Math.min(1, c.glow + 0.14);
-      } else {
-        c.glow = Math.max(0, c.glow - 0.04);
-      }
+  function update() {
+    const rect = wrapper.getBoundingClientRect();
+    const total = wrapper.offsetHeight - window.innerHeight;
+    const scrolled = -rect.top;
+    const progress = Math.min(1, Math.max(0, total > 0 ? scrolled / total : 0));
+    render(progress);
+    ticking = false;
+  }
 
-      c.vx = c.vx * 0.88 + c.baseVx * 0.12;
-      c.vy = c.vy * 0.88 + c.baseVy * 0.12;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(update);
+      ticking = true;
+    }
+  }, { passive: true });
+  window.addEventListener('resize', update);
 
-      c.x += c.vx + Math.sin(t * 0.45 + c.phase) * 0.14;
-      c.y += c.vy + Math.cos(t * 0.38 + c.phase + 1) * 0.10;
-      c.angle += c.spin;
-
-      if (c.x > W + c.rx * 2) c.x = -c.rx * 2;
-      if (c.x < -c.rx * 2) c.x = W + c.rx * 2;
-      if (c.y > H + c.ry * 2) c.y = -c.ry * 2;
-      if (c.y < -c.ry * 2) c.y = H + c.ry * 2;
-
-      drawCell(c);
-    });
-  })();
+  update();
 })();
