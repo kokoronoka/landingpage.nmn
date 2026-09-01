@@ -555,7 +555,48 @@ section { position: relative; padding: 9rem 6vw; }
   align-items: center;
   justify-content: center;
   min-height: 420px;
+  overflow: visible;
 }
+
+.capsule-orbit {
+  position: absolute;
+  width: 150px;
+  height: 52px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(203,161,53,0.85), rgba(255,255,255,0.18));
+  box-shadow: 0 0 24px rgba(203,161,53,0.35), inset 0 0 18px rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.18);
+  opacity: 0.8;
+  z-index: 1;
+  animation: capsuleFloat 7s ease-in-out infinite;
+}
+
+.capsule-orbit--one {
+  top: 6%;
+  left: 6%;
+  transform: rotate(-18deg);
+}
+
+.capsule-orbit--two {
+  right: 9%;
+  bottom: 12%;
+  width: 132px;
+  height: 46px;
+  animation-delay: 1.5s;
+  transform: rotate(18deg);
+}
+
+@keyframes capsuleFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--capsule-rot, -18deg));
+  }
+  50% {
+    transform: translate3d(12px, -18px, 0) rotate(calc(var(--capsule-rot, -18deg) + 5deg));
+  }
+}
+
+.capsule-orbit--one { --capsule-rot: -18deg; }
+.capsule-orbit--two { --capsule-rot: 18deg; }
 
 .product-glow {
   position: absolute;
