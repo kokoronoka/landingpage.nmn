@@ -256,6 +256,47 @@
   update();
 })();
 
+// ---------- Capsule technology video, blended via canvas ----------
+// mix-blend-mode on a <video> is unreliable in Chromium (hardware video
+// decode paints through a compositor layer that skips CSS blending), so the
+// black background never disappears. Repainting frames onto a <canvas> each
+// tick uses the normal software compositing path, where mix-blend-mode:
+// screen correctly drops out the black and lets the card's glow show through.
+(function capsuleVideoBlend() {
+  const media = document.getElementById('capsuleMedia');
+  const video = document.getElementById('capsuleVideo');
+  const canvas = document.getElementById('capsuleCanvas');
+  if (!media || !video || !canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  function resize() {
+    const rect = media.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+  }
+
+  let activated = false;
+
+  function draw() {
+    if (video.readyState >= 2) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (!activated) {
+        activated = true;
+        video.classList.add('is-canvas-driven');
+        canvas.classList.add('is-active');
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize, { passive: true });
+  resize();
+  requestAnimationFrame(draw);
+})();
+
 // ---------- Miron Glass immersive scroll-expand video ----------
 (function glassScrollExpand() {
   const wrapper = document.getElementById('glassHeroWrapper');
