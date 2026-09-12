@@ -635,19 +635,26 @@ section { position: relative; padding: 9rem 6vw; }
   mix-blend-mode: screen;
   transition: opacity 0.3s ease;
 }
-/* Chromium's hardware video decode path largely ignores mix-blend-mode on
-   <video> itself, so main.js repaints frames onto this canvas (a normal
-   software-composited element) and blends that instead — the video stays
-   in the DOM underneath as the no-JS / unsupported-canvas fallback. */
+/* main.js repaints the video into this canvas with the black keyed out to real
+   alpha; the <video> stays in the DOM underneath as the no-JS fallback.
+   Until keying is confirmed (and if the canvas turns out to be unreadable, e.g.
+   opened over file://) this approximates it by screen-blending, with contrast
+   crushing the clip's ~7/255 black floor so it lifts the card as little as possible. */
 .capsule-tech-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  filter: contrast(1.1);
   mix-blend-mode: screen;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+}
+/* Keyed frames carry their own alpha, so they composite normally. */
+.capsule-tech-canvas.is-keyed {
+  filter: none;
+  mix-blend-mode: normal;
 }
 .capsule-tech-canvas.is-active { opacity: 1; }
 .capsule-tech-video.is-canvas-driven { opacity: 0; }

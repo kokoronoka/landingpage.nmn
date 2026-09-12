@@ -256,45 +256,103 @@
   update();
 })();
 
-// ---------- Capsule technology video, blended via canvas ----------
-// mix-blend-mode on a <video> is unreliable in Chromium (hardware video
-// decode paints through a compositor layer that skips CSS blending), so the
-// black background never disappears. Repainting frames onto a <canvas> each
-// tick uses the normal software compositing path, where mix-blend-mode:
-// screen correctly drops out the black and lets the card's glow show through.
-(function capsuleVideoBlend() {
+// ---------- Capsule technology video, keyed to true transparency ----------
+// The clip is a capsule on solid black. mix-blend-mode can't clear that black:
+// Chromium's video decode path skips blending on <video> entirely, and even on
+// a <canvas> the blend resolves against the card's backdrop-filter group rather
+// than the glow painted behind it, which leaves a visible rectangle either way.
+// So each frame is repainted with alpha taken from its own brightness — black
+// becomes fully transparent and the capsule composites like an alpha video.
+(function capsuleVideoKey() {
   const media = document.getElementById('capsuleMedia');
   const video = document.getElementById('capsuleVideo');
   const canvas = document.getElementById('capsuleCanvas');
   if (!media || !video || !canvas) return;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return;
+
+  // Keying cost is per pixel and the clip is soft, so resolution past this buys
+  // nothing on a ~460px box.
+  const MAX_SIDE = 600;
+  // The video's "black" bottoms out around 7/255; anything under this is
+  // background, not content.
+  const BLACK_FLOOR = 10;
+  const SCALE = 255 / (255 - BLACK_FLOOR);
+
+  let keying = true;
+  let started = false;
+  let visible = true;
+  let lastTime = -1;
 
   function resize() {
     const rect = media.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.max(1, Math.round(rect.width * dpr));
-    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    const side = Math.min(Math.round(Math.max(rect.width, 1) * dpr), MAX_SIDE);
+    if (side !== canvas.width) {
+      canvas.width = side;
+      canvas.height = side;
+      lastTime = -1;
+    }
   }
 
-  let activated = false;
+  function key() {
+    const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = frame.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      const peak = r > g ? (r > b ? r : b) : (g > b ? g : b);
+      const a = (peak - BLACK_FLOOR) * SCALE;
+      if (a <= 0) {
+        d[i + 3] = 0;
+        continue;
+      }
+      // Undo the black's premultiplying effect so soft edges keep their colour
+      // instead of reading as grey haze once they're semi-transparent.
+      const gain = 255 / a;
+      d[i] = r * gain;
+      d[i + 1] = g * gain;
+      d[i + 2] = b * gain;
+      d[i + 3] = a;
+    }
+    ctx.putImageData(frame, 0, 0);
+  }
 
-  function draw() {
-    if (video.readyState >= 2) {
+  function paint() {
+    // currentTime gates the work to the video's own frame rate rather than the
+    // display's, and `visible` keeps it off entirely while the card is scrolled away.
+    if (visible && video.readyState >= 2 && video.currentTime !== lastTime) {
+      lastTime = video.currentTime;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      if (!activated) {
-        activated = true;
+      if (keying) {
+        try {
+          key();
+        } catch (err) {
+          // Canvas tainted (e.g. opened over file://) — fall back to the CSS
+          // screen-blend approximation rather than freezing on one frame.
+          keying = false;
+          canvas.classList.remove('is-keyed');
+        }
+      }
+      if (!started) {
+        started = true;
+        if (keying) canvas.classList.add('is-keyed');
         video.classList.add('is-canvas-driven');
         canvas.classList.add('is-active');
       }
     }
-    requestAnimationFrame(draw);
+    requestAnimationFrame(paint);
+  }
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => {
+      visible = entries[0].isIntersecting;
+    }, { rootMargin: '10% 0px' }).observe(media);
   }
 
   window.addEventListener('resize', resize, { passive: true });
   resize();
-  requestAnimationFrame(draw);
+  requestAnimationFrame(paint);
 })();
 
 // ---------- Miron Glass immersive scroll-expand video ----------
